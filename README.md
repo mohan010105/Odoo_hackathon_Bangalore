@@ -1,298 +1,651 @@
-# DAYFLOW HRMS
+# ⚡ DAYFLOW HRMS
 
-Dayflow is a role-based HR management system covering employee records, attendance,
-leave, payroll and payslips, with a secure server-side Odoo integration layer.
+### Enterprise Workforce Management • Payroll • Attendance • Time Off • Odoo Integration
 
-## 1. Project Overview
+<p align="center">
 
-Dayflow gives HR teams a single view of their workforce and gives employees
-self-service access to their own records. Administrators provision employees,
-correct attendance, approve leave, generate payroll and monitor Odoo
-synchronisation. Employees check in and out, request leave, track balances and
-open their payslips.
+**A modern, secure, and scalable Human Resource Management System designed to unify workforce operations with enterprise-grade Odoo integration.**
 
-## 2. Problem Statement
-
-HR operations often involve disconnected workflows for employee records,
-attendance, leave, payroll and reporting. Data is re-entered between tools,
-approvals happen over chat and email, and payroll depends on spreadsheets that
-nobody can audit.
-
-## 3. Solution
-
-Dayflow provides a unified HR workflow connecting employee management,
-attendance, leave, payroll, payslips, activity logging and Odoo integration —
-with every sensitive operation executed server-side and recorded.
-
-## 4. Key Features
-
-**Employee Management**
-- Admin-only provisioning with generated login IDs and first-login password change
-- Employee directory with search and multi-criteria filters
-- Employee profile with editable details and profile picture
-- Profile completion indicator
-
-**Attendance**
-- Check-in / check-out with a live session timer
-- Server-calculated work hours against an 8-hour standard, plus extra hours
-- Attendance history for employees, organisation-wide view for admins
-- Admin correction with a notification to the employee
-- CSV export
-
-**Leave Management**
-- Leave types, annual quotas and per-employee allocations
-- Requests with inclusive calendar-day counting and mandatory attachments where required
-- Admin approval queue with approve / reject and comments
-- Leave balance cards and a month-view leave calendar
-- CSV export with filters
-
-**Payroll**
-- Salary components (earnings and deductions, fixed or percentage)
-- Per-employee salary structures
-- Server-side payroll preview with exceptions, then confirmed generation
-- Register with generated / processed / paid transitions
-- CSV exports and batch payslip download (ZIP), idempotent per export
-
-**Payslips**
-- Printable payslip with earnings, deductions, attendance and leave summary
-- Employee payslip history, deep-linked from payroll notifications
-
-**Notifications**
-- In-app notifications for attendance corrections, leave decisions and payroll readiness
-- Category filters with per-category unread counts
-- Unread-first paginated history with "load more" and mark-all-as-read
-
-**Odoo Integration**
-- Connection test with truthful CONNECTED / DISCONNECTED / NOT CONFIGURED states
-- Integration dashboard: last successful sync, last attempt, per-module statistics
-- Bulk employee sync with progress, dry-run preview, and a safe cancel
-- Sync activity log with filters and CSV export, plus per-record retry
-
-**Role-Based Access, Security, Reporting**
-- Admin activity log with filters, sorting, pagination and idempotent CSV export
-- Row Level Security on every table, admin checks enforced server-side
-- Session idle timeout and password strength rules
-
-## 5. User Roles
-
-**ADMIN** — manage employees, view organisation attendance, approve or reject
-leave, manage payroll and salary structures, view the activity log, manage the
-Odoo integration and review synchronisation history.
-
-**EMPLOYEE** — view and edit own profile, check in and out, view own
-attendance, request leave, view leave balance, view own payroll and payslips,
-receive notifications.
-
-Employees cannot reach administrative routes or data: route guards handle the
-UI, and server-side role checks plus Row Level Security enforce the boundary.
-
-## 6. Architecture
-
-```text
-USER
- ↓
-DAYFLOW FRONTEND (React + TanStack Start)
- ↓
-AUTHENTICATION (email / password, roles)
- ↓
-SUPABASE-BACKED CLOUD
- ├── PostgreSQL (schema, RLS, SQL business logic)
- ├── Storage (avatars, leave attachments)
- └── Realtime (attendance and notification updates)
- ↓
-SECURE INTEGRATION LAYER (server functions, credentials never in the browser)
- ↓
-ODOO
-```
-
-Dayflow handles the employee-facing HR workflow. Odoo provides enterprise
-integration. The architecture is deliberately one-directional at the boundary:
-if Odoo becomes temporarily unavailable, Dayflow keeps operating and
-synchronisation records move to PENDING or FAILED with retry available.
-
-## 7. Technology Stack
-
-- React 19 with TanStack Start (SSR) and TanStack Router
-- TanStack Query for data fetching and cache
-- TypeScript, Vite, Tailwind CSS v4, shadcn/ui components
-- Zod validation on every server function input
-- Server functions (`createServerFn`) for all privileged logic
-- PostgreSQL with SQL `SECURITY DEFINER` functions for attendance, leave and payroll math
-
-## 8. Backend Architecture
-
-- Authentication with email verification and leaked-password protection
-- `profiles` and a separate `user_roles` table (roles are never stored on profiles)
-- `has_role` / `is_admin` security-definer helpers used by policies
-- Business rules implemented in SQL so a client cannot fabricate hours, balances or salary totals
-- Private storage buckets with signed URLs for leave attachments
-- Realtime channels for attendance and notification updates
-
-## 9. Odoo Integration
-
-- Credentials live only in server environment variables and are read inside handlers
-- All Odoo calls run through an admin-gated server layer; the browser never holds credentials
-- `odoo_mappings` links Dayflow records to Odoo IDs, making re-runs idempotent (update instead of duplicate)
-- `odoo_sync_logs` records each operation with a safe, summarised message — no stack traces, no provider internals
-- Failures are categorised and retryable per record or per module
-- Bulk employee sync supports a dry run that writes nothing, plus cancellation with a final recorded status
-
-## 10. Database Overview
-
-| Area | Tables |
-| --- | --- |
-| Identity | `profiles`, `user_roles`, `companies` |
-| Employees | `employees`, `employee_login_sequences` |
-| Attendance | `attendance` |
-| Leave | `leave_types`, `leave_allocations`, `leave_requests` |
-| Payroll | `salary_components`, `salary_structures`, `salary_structure_components`, `payroll_records` |
-| Platform | `notifications`, `audit_logs`, `export_jobs` |
-| Integration | `odoo_mappings`, `odoo_sync_logs` |
-
-Every table has Row Level Security enabled with explicit grants. Employees can
-read only their own attendance, leave, salary and payroll rows; administrators
-are authorised through `is_admin()`.
-
-## 11. Security
-
-- Row Level Security on all tables; no permissive catch-all policies
-- Roles in a dedicated table, checked through a security-definer function
-- Server-side admin assertions on every privileged server function
-- Attendance timestamps, leave balances and payroll totals are computed in SQL
-- Password strength rules, first-login password change, idle session timeout
-- Activity log for sensitive actions; credentials and tokens are never recorded
-- Export claims by idempotency key so duplicate clicks cannot duplicate records
-- No secrets in client code, `localStorage`, `sessionStorage`, public files or logs
-
-## 12. Installation
-
-Requires Node.js 20 or newer.
-
-```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm install
-```
-
-## 13. Environment Setup
-
-Copy the template and fill in your own values:
-
-```sh
-cp .env.example .env
-```
-
-Client (browser-safe, injected into the bundle):
-
-```text
-VITE_SUPABASE_URL=
-VITE_SUPABASE_PUBLISHABLE_KEY=
-VITE_SUPABASE_PROJECT_ID=
-```
-
-Server-only (never prefix with `VITE_`):
-
-```text
-SUPABASE_URL=
-SUPABASE_PUBLISHABLE_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-ODOO_BASE_URL=
-ODOO_DATABASE=
-ODOO_USERNAME=
-ODOO_API_KEY=
-```
-
-`ODOO_PASSWORD` is accepted as an alias for `ODOO_API_KEY`. When the Odoo
-variables are absent, the integration reports NOT CONFIGURED and the rest of
-the application continues to work normally. `.env` is git-ignored; only
-`.env.example` (placeholders) is tracked.
-
-## 14. Running Locally
-
-```sh
-npm run dev      # development server (Vite)
-npm run build    # production build → dist/
-npm run preview  # serves the production build from dist/
-```
-
-`npm run dev` prints the local URL. Sign in with an existing account, or create
-the first administrator through the `/setup` route.
-
-## 15. Backend Setup
-
-The app talks to a Supabase (PostgreSQL) project. To point it at your own:
-
-1. Create a project and run every file in `supabase/migrations/` in filename
-   order — they create the tables, RLS policies, grants, SQL functions and
-   triggers the app relies on.
-2. Create the private storage buckets `profile-pictures`,
-   `employee-documents`, `leave-attachments` and `company-logos`.
-3. Put the project URL, publishable key and project id in `.env`.
-
-There are no Supabase Edge Functions in this project. All privileged logic runs
-as TanStack Start server functions (`src/lib/*.functions.ts` with
-`src/lib/**/*.server.ts` helpers) plus SQL `SECURITY DEFINER` functions, and
-external/cron callers use server routes under `src/routes/api/`. Server-only
-secrets (service role key, Odoo credentials) are read with `process.env` inside
-handlers and never reach the browser.
-
-## 16. Deployment
-
-This is a server-rendered React app (TanStack Start), not a static SPA, so it
-needs a Node-capable host or an adapter — no rewrite/`_redirects` file is
-required for client-side routing.
-
-```sh
-npm run build     # → dist/client (assets) + dist/server/index.mjs (server)
-npm run preview   # node dist/server/index.mjs
-```
-
-Deploy with `npm start`-style hosting by running `node dist/server/index.mjs`
-behind your process manager, or target a platform adapter by setting
-`NITRO_PRESET` at build time, e.g.:
-
-```sh
-NITRO_PRESET=vercel npm run build
-NITRO_PRESET=netlify npm run build
-NITRO_PRESET=cloudflare-module npm run build
-```
-
-Configure the same environment variables in the hosting dashboard. Client
-variables must be present at build time; server variables at runtime.
-
-## 17. Demo Workflow
-
-1. Login
-2. Admin dashboard — one view of the workforce
-3. Employee directory → open an employee
-4. Employee profile
-5. Attendance — check-in / check-out and history
-6. Leave — employee requests leave
-7. Admin approves the request
-8. Payroll — preview and generate
-9. Payslip — open the generated payslip
-10. Odoo — connection state and synchronisation history
-11. Activity log — who did what, and when
-
-Employee path: login → dashboard → check in → attendance → request leave →
-leave status → payslip → notifications → logout.
-
-## 18. Future Enhancements
-
-- Shift and roster planning
-- Bi-directional Odoo synchronisation
-- Performance reviews and goals
-- Document management with expiry reminders
-- Multi-currency and multi-country payroll rules
+</p>
 
 ---
 
-**Problem** — HR operations often involve disconnected workflows for employee
-records, attendance, leave, payroll and reporting.
+## 🚀 Overview
 
-**Solution** — Dayflow provides a unified HR workflow connecting employee
-management, attendance, leave, payroll, payslips, analytics and Odoo
-integration.
+**Dayflow HRMS** is a full-stack Human Resource Management System designed to centralize and streamline employee lifecycle management.
 
-**Differentiator** — Dayflow combines an intuitive employee experience with
-secure enterprise integration and resilient synchronisation.
+From employee onboarding and attendance to leave management, salary structures, payroll, payslips, notifications, and Odoo synchronization, Dayflow provides a unified platform for managing workforce operations.
+
+The platform combines:
+
+- 🧑‍💼 Employee Management
+- ⏱️ Attendance Tracking
+- 🌴 Time-Off Management
+- 💰 Salary Management
+- 🧾 Payroll Processing
+- 📄 Payslip Management
+- 🔔 Notifications
+- 🔗 Odoo Integration
+- 🔐 Role-Based Access Control
+- 🛡️ Supabase Row-Level Security
+- 📊 Workforce Analytics
+
+---
+
+# 🎯 Problem
+
+Modern organizations often operate HR processes across disconnected systems.
+
+Employee information, attendance, leave requests, payroll, and external ERP systems can become fragmented, resulting in:
+
+- Duplicate data
+- Manual HR operations
+- Inconsistent employee records
+- Delayed payroll processing
+- Poor workforce visibility
+- Difficult ERP synchronization
+- Increased administrative workload
+
+Dayflow addresses these challenges through a **centralized HR operations platform** with integrated Odoo synchronization.
+
+---
+
+# 💡 Solution
+
+Dayflow creates a unified HR ecosystem:
+
+```text
+                    ┌──────────────────────┐
+                    │      DAYFLOW HRMS    │
+                    └──────────┬───────────┘
+                               │
+        ┌──────────────────────┼──────────────────────┐
+        │                      │                      │
+        ▼                      ▼                      ▼
+   EMPLOYEES              ATTENDANCE              TIME OFF
+        │                      │                      │
+        └──────────────────────┼──────────────────────┘
+                               │
+                               ▼
+                         COMPENSATION
+                               │
+                               ▼
+                            PAYROLL
+                               │
+                               ▼
+                           PAYSLIPS
+                               │
+                               ▼
+                    ┌─────────────────────┐
+                    │   ODOO INTEGRATION  │
+                    └─────────────────────┘
+                               │
+                               ▼
+                         ODOO ERP SYSTEM
+✨ Core Capabilities
+👥 Employee Management
+
+Centralized employee directory with structured workforce information.
+
+Features include:
+
+Employee profiles
+Employee IDs
+Departments
+Job positions
+Employment status
+Profile information
+Employee documents
+Search and filtering
+Role-based access
+⏱️ Attendance Management
+
+Track employee attendance through a centralized interface.
+
+Capabilities
+Check-in
+Check-out
+Attendance history
+Daily attendance status
+Workforce attendance visibility
+Attendance records linked to employees
+Employee
+   │
+   ├── Check In
+   │
+   ├── Active Attendance
+   │
+   └── Check Out
+          │
+          ▼
+      Attendance Record
+🌴 Time-Off Management
+
+Employees can submit leave requests while HR/Admin users can review and manage them.
+
+Workflow
+Employee
+    │
+    ▼
+Create Leave Request
+    │
+    ▼
+Pending Approval
+    │
+    ├───────────────┐
+    ▼               ▼
+ Approved         Rejected
+    │
+    ▼
+Leave Recorded
+
+Supports:
+
+Leave requests
+Leave types
+Leave balances
+Approval workflows
+Rejection workflows
+Leave history
+HR visibility
+💰 Salary Management
+
+Dayflow provides structured compensation management.
+
+Salary information can include:
+
+Base salary
+Allowances
+Deductions
+Net compensation
+Salary structures
+Compensation history
+
+Sensitive salary information is protected using authorization and database-level security.
+
+🧾 Payroll Management
+
+Payroll processing is integrated into the employee lifecycle.
+
+Employee
+    │
+    ▼
+Salary Structure
+    │
+    ▼
+Payroll Run
+    │
+    ▼
+Payroll Processing
+    │
+    ▼
+Payslip
+
+Capabilities include:
+
+Payroll runs
+Employee payroll records
+Earnings
+Deductions
+Net pay
+Payroll status
+Payslip generation
+📄 Payslip Management
+
+Employees can access their payroll information through structured payslips.
+
+Payslips provide:
+
+Employee information
+Earnings
+Allowances
+Deductions
+Net pay
+Payroll period
+Payslip history
+🔔 Notifications
+
+Dayflow provides centralized notifications for important workforce events.
+
+Examples:
+
+Leave approvals
+Leave rejections
+Payroll updates
+HR actions
+System notifications
+🔗 ODOO INTEGRATION
+Enterprise ERP Synchronization
+
+One of Dayflow's core capabilities is its integration with Odoo.
+
+The integration allows Dayflow to synchronize relevant HR data with an external Odoo environment.
+
+Integration Architecture
+                 DAYFLOW HRMS
+                       │
+                       ▼
+              Odoo Integration Layer
+                       │
+          ┌────────────┴────────────┐
+          │                         │
+          ▼                         ▼
+      Connection                Synchronization
+       Testing                     Engine
+          │                         │
+          └────────────┬────────────┘
+                       │
+                       ▼
+                  ODOO ERP
+Integration Features
+Odoo connection testing
+Connection status
+Data synchronization
+Sync summaries
+Sync history
+Created record tracking
+Updated record tracking
+Skipped record tracking
+Failed record tracking
+External reference tracking
+Duplicate synchronization prevention
+🔄 Synchronization Strategy
+
+Dayflow maintains external references to prevent duplicate records.
+
+Dayflow Record
+      │
+      ▼
+Check External Reference
+      │
+      ├───────────────┐
+      │               │
+      ▼               ▼
+   Exists          Not Found
+      │               │
+      ▼               ▼
+   Update           Create
+      │               │
+      └───────┬───────┘
+              ▼
+        Sync Result
+              │
+              ▼
+        Sync History
+
+This approach enables safer synchronization between Dayflow and Odoo.
+
+🧠 System Architecture
+                         ┌──────────────────┐
+                         │     FRONTEND     │
+                         │                  │
+                         │ React + Vite     │
+                         │ TypeScript       │
+                         │ Tailwind CSS     │
+                         └────────┬─────────┘
+                                  │
+                                  ▼
+                         ┌──────────────────┐
+                         │   APPLICATION    │
+                         │     SERVICES     │
+                         └────────┬─────────┘
+                                  │
+              ┌───────────────────┼───────────────────┐
+              │                   │                   │
+              ▼                   ▼                   ▼
+        SUPABASE AUTH         DATABASE            STORAGE
+              │                   │                   │
+              │                   ▼                   │
+              │              PostgreSQL              │
+              │                   │                   │
+              └───────────────────┼───────────────────┘
+                                  │
+                                  ▼
+                         ODOO INTEGRATION
+                                  │
+                                  ▼
+                             ODOO ERP
+🛠️ Technology Stack
+Frontend
+Technology	Purpose
+React	UI framework
+TypeScript	Type-safe development
+Vite	Development & build tooling
+Tailwind CSS	Styling
+React Router	Application routing
+Backend & Infrastructure
+Technology	Purpose
+Supabase	Backend platform
+PostgreSQL	Relational database
+Supabase Auth	Authentication
+Supabase Storage	File management
+Row-Level Security	Database authorization
+Enterprise Integration
+Technology	Purpose
+Odoo	ERP / enterprise integration
+Odoo Sync Layer	Data synchronization
+External References	Duplicate prevention
+🔐 Security Architecture
+
+Security is implemented across multiple layers.
+
+Authentication
+
+Supabase Auth manages:
+
+User authentication
+Sessions
+Password verification
+Logout
+Authentication state
+Authorization
+
+Dayflow uses role-aware access control.
+
+                 USER
+                   │
+                   ▼
+             AUTHENTICATED
+                   │
+                   ▼
+                  ROLE
+          ┌────────┼────────┐
+          ▼        ▼        ▼
+        ADMIN      HR     EMPLOYEE
+
+Different roles receive different levels of access.
+
+🛡️ Row-Level Security
+
+Supabase PostgreSQL Row-Level Security protects sensitive workforce information.
+
+Protected areas include:
+
+Employee records
+Attendance
+Leave requests
+Salary
+Payroll
+Payslips
+Notifications
+Odoo integration data
+
+The application does not rely solely on frontend visibility for security.
+
+📁 Storage Architecture
+
+Dayflow supports dedicated storage areas for workforce assets.
+
+Supabase Storage
+│
+├── company-logos
+├── employee-avatars
+├── employee-documents
+├── leave-attachments
+└── payslips
+
+Sensitive employee documents and payslips are handled through controlled access.
+
+🧩 Application Modules
+DAYFLOW
+│
+├── Dashboard
+│
+├── People
+│   └── Employees
+│
+├── Workforce
+│   ├── Attendance
+│   └── Time Off
+│
+├── Compensation
+│   ├── Salary
+│   ├── Payroll
+│   └── Payslips
+│
+├── Communication
+│   └── Notifications
+│
+└── Administration
+    ├── Odoo Integration
+    └── Settings
+⚙️ Installation
+1. Clone the Repository
+git clone <YOUR_REPOSITORY_URL>
+cd dayflow-hrms
+2. Install Dependencies
+npm install
+🔐 Environment Configuration
+
+Create a .env file based on .env.example.
+
+Example:
+
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+Additional server-side variables required by the Odoo integration should remain server-side and must never be exposed through frontend code.
+
+⚠️ Never commit:
+.env
+.env.local
+service-role keys
+Odoo passwords
+private API credentials
+▶️ Development
+
+Start the development server:
+
+npm run dev
+
+The application will be available through the local Vite development server.
+
+🏗️ Production Build
+
+Build the application:
+
+npm run build
+
+Preview the production build:
+
+npm run preview
+
+Expected build output:
+
+dist/
+🔑 Demo Account
+Employee Demo
+Login ID: MORA20260002
+Password: Mohan@007
+
+These credentials are intended for the hackathon demonstration environment. Do not use demo credentials in a production deployment.
+
+🧪 Demo Workflow
+
+A recommended hackathon demonstration flow:
+
+LOGIN
+  │
+  ▼
+DASHBOARD
+  │
+  ├──────────────► EMPLOYEE MANAGEMENT
+  │
+  ├──────────────► ATTENDANCE
+  │
+  ├──────────────► TIME OFF
+  │
+  ├──────────────► SALARY
+  │
+  ├──────────────► PAYROLL
+  │
+  ├──────────────► PAYSLIPS
+  │
+  └──────────────► ODOO INTEGRATION
+                         │
+                         ▼
+                    TEST CONNECTION
+                         │
+                         ▼
+                     SYNC DATA
+                         │
+                         ▼
+                    SYNC SUMMARY
+                         │
+                         ▼
+                    SYNC HISTORY
+📊 HRMS Data Lifecycle
+Employee
+   │
+   ├── Profile
+   │
+   ├── Attendance
+   │
+   ├── Time Off
+   │
+   └── Compensation
+           │
+           ▼
+        Payroll
+           │
+           ▼
+        Payslip
+           │
+           ▼
+     Odoo Synchronization
+🌐 Deployment
+
+Dayflow can be deployed using modern frontend hosting platforms.
+
+Recommended production flow:
+
+GitHub
+   │
+   ▼
+Build Pipeline
+   │
+   ▼
+npm run build
+   │
+   ▼
+dist/
+   │
+   ▼
+Production Hosting
+   │
+   ▼
+DAYFLOW HRMS
+
+Before deployment verify:
+
+Environment variables
+Supabase configuration
+Authentication
+Database policies
+Storage policies
+Odoo credentials
+Production API URLs
+Build configuration
+🔒 Production Security Checklist
+
+Before production deployment:
+
+[ ] No secrets committed
+[ ] No service-role key in frontend
+[ ] RLS enabled
+[ ] Authentication enabled
+[ ] Role permissions verified
+[ ] Private storage protected
+[ ] Odoo credentials protected
+[ ] HTTPS enabled
+[ ] Environment variables configured
+[ ] Demo credentials removed/rotated
+📈 Future Roadmap
+
+Potential future extensions include:
+
+AI-Powered HR Assistant
+
+Natural-language HR queries such as:
+
+"How many employees are on leave today?"
+"Show attendance trends this month."
+"Which departments have the highest absenteeism?"
+Workforce Analytics
+Attrition analytics
+Attendance trends
+Leave patterns
+Payroll analytics
+Department performance
+Advanced Odoo Synchronization
+Bi-directional synchronization
+Conflict resolution
+Scheduled synchronization
+Sync retry mechanisms
+Detailed audit trails
+Enterprise Expansion
+Multi-company support
+Advanced RBAC
+Approval hierarchies
+Automated payroll workflows
+HR document lifecycle management
+🏆 Hackathon Value Proposition
+
+Dayflow is designed around three core principles:
+
+01 — Centralization
+
+Bring critical HR workflows into a unified platform.
+
+02 — Automation
+
+Reduce repetitive HR operations through structured workflows.
+
+03 — Integration
+
+Connect workforce management with enterprise ERP infrastructure through Odoo.
+
+⚡ Why Dayflow?
+             ┌────────────────────────────┐
+             │         DAYFLOW HRMS       │
+             ├────────────────────────────┤
+             │                            │
+             │  👥 Workforce              │
+             │  ⏱️ Attendance             │
+             │  🌴 Time Off               │
+             │  💰 Compensation           │
+             │  🧾 Payroll                │
+             │  📄 Payslips              │
+             │  🔔 Notifications          │
+             │  🔗 Odoo Integration       │
+             │  🔐 Secure Access          │
+             │                            │
+             └────────────────────────────┘
+
+One platform. One workforce. One operational view.
+
+🤝 Team
+
+Built for the Odoo Hackathon.
+
+Project
+
+Dayflow HRMS
+
+Category
+
+Human Resource Management / Enterprise Software
+
+Core Focus
+
+Workforce Management + Odoo Integration
+
+📜 License
+
+This project is developed for hackathon and educational purposes.
+<p align="center">
+⚡ DAYFLOW HRMS
+
+Modern Workforce Management. Connected to Enterprise Operations.
+
+</p> ```
