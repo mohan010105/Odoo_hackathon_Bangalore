@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bell } from "lucide-react";
+import { Link } from "@tanstack/react-router";
+import { Bell, ExternalLink } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,15 @@ function relativeTime(iso: string) {
   const hours = Math.round(minutes / 60);
   if (hours < 24) return `${hours}h ago`;
   return new Date(iso).toLocaleDateString(undefined, { day: "2-digit", month: "short" });
+}
+
+function linkTarget(link: string) {
+  const [path, query] = link.split("?");
+  const search: Record<string, string> = {};
+  if (query) {
+    for (const [key, value] of new URLSearchParams(query).entries()) search[key] = value;
+  }
+  return { to: path ?? link, search };
 }
 
 /**
@@ -63,6 +73,13 @@ export function NotificationBell() {
     void queryClient.invalidateQueries({ queryKey: ["notifications"] });
   };
 
+  const handleNotificationClick = async (id: string, readAt: string | null) => {
+    if (!readAt) {
+      await markRead(id);
+    }
+    setOpen(false);
+  };
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
@@ -98,7 +115,7 @@ export function NotificationBell() {
           ) : (
             <ul className="divide-y divide-border">
               {(list.data?.rows ?? []).map((item) => (
-                <li key={item.id} className="px-3 py-3">
+                <li key={item.id} className={`px-3 py-3 ${!item.read_at ? "bg-primary/5" : ""}`}>
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-sm font-medium">{item.title}</p>
                     <span className="shrink-0 text-xs text-muted-foreground">
@@ -108,21 +125,52 @@ export function NotificationBell() {
                   {item.body ? (
                     <p className="mt-1 text-sm text-muted-foreground">{item.body}</p>
                   ) : null}
-                  {!item.read_at ? (
-                    <Button
-                      variant="link"
-                      size="sm"
-                      className="h-auto p-0"
-                      onClick={() => void markRead(item.id)}
-                    >
-                      Mark as read
-                    </Button>
-                  ) : null}
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    {item.link ? (
+                      <Button
+                        asChild
+                        size="sm"
+                        variant="outline"
+                        className="h-6 px-2 text-xs"
+                        onClick={() => void handleNotificationClick(item.id, item.read_at)}
+                      >
+                        <Link
+                          to={linkTarget(item.link).to}
+                          search={linkTarget(item.link).search}
+                        >
+                          <span className="flex items-center gap-1">
+                            Open <ExternalLink className="size-3" />
+                          </span>
+                        </Link>
+                      </Button>
+                    ) : null}
+                    {!item.read_at ? (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs text-muted-foreground"
+                        onClick={() => void markRead(item.id)}
+                      >
+                        Mark as read
+                      </Button>
+                    ) : null}
+                  </div>
                 </li>
               ))}
             </ul>
           )}
         </ScrollArea>
+        <div className="border-t border-border p-2">
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className="w-full justify-center text-xs"
+            onClick={() => setOpen(false)}
+          >
+            <Link to="/employee/notifications">View all notifications</Link>
+          </Button>
+        </div>
       </PopoverContent>
     </Popover>
   );

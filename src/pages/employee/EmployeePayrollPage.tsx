@@ -7,6 +7,7 @@ import { EmptyState, ErrorState, LoadingState } from "@/components/common/states
 import { PayrollStatusBadge } from "@/components/payroll/PayrollStatusBadge";
 import { PayslipDialog } from "@/components/payroll/PayslipDialog";
 import { SalaryBreakdownTable } from "@/components/payroll/SalaryBreakdownTable";
+import { EntitlementHistoryView } from "@/components/employee/EntitlementHistoryView";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -223,6 +224,12 @@ export function EmployeePayrollPage() {
           )}
         </CardContent>
       </Card>
+
+      <EntitlementHistoryView
+        filterType="SALARY_STRUCTURE"
+        title="Salary structure revision history"
+        description="Record of your compensation revisions and basic salary adjustments."
+      />
 
       <PayslipDialog record={payslip} onClose={() => setPayslip(null)} />
     </div>

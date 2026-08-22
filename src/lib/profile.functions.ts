@@ -95,3 +95,13 @@ export const updateMyProfile = createServerFn({ method: "POST" })
 
     return { ok: true };
   });
+
+/** Fetch the signed-in user's entitlement change history (leave allocations & salary structures). */
+export const getMyEntitlementHistory = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { data, error } = await context.supabase.rpc("my_entitlement_history");
+    if (error) throw new Error("We could not load your entitlement history.");
+    return data ?? [];
+  });
+

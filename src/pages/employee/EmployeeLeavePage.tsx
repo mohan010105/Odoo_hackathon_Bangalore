@@ -7,6 +7,7 @@ import { LeaveBalanceCards } from "@/components/leave/LeaveBalanceCards";
 import { LeaveRequestForm } from "@/components/leave/LeaveRequestForm";
 import { LeaveCalendar } from "@/components/leave/LeaveCalendar";
 import { LeaveRequestsTable } from "@/components/leave/LeaveRequestsTable";
+import { EntitlementHistoryView } from "@/components/employee/EntitlementHistoryView";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { leaveService } from "@/services/leave/leaveService";
 
@@ -91,6 +92,12 @@ export function EmployeeLeavePage() {
           )}
         </CardContent>
       </Card>
+
+      <EntitlementHistoryView
+        filterType="LEAVE_ALLOCATION"
+        title="Leave allocation history"
+        description="Record of your annual leave allocations and quota adjustments."
+      />
     </div>
   );
 }
