@@ -28,29 +28,29 @@ export function DashboardSection({
   ctaLabel,
 }: DashboardSectionProps) {
   const body = (
-    <Card className="card-interactive h-full focus-within:border-primary/60">
-      <CardHeader className="space-y-2">
-        <span
-          aria-hidden="true"
-          className="inline-flex size-9 items-center justify-center rounded-lg bg-secondary text-secondary-foreground"
-        >
-          <Icon className="size-4" />
-        </span>
-        <CardTitle className="font-display text-base">{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {to ? (
-          <span className="inline-flex items-center gap-1.5 text-sm font-medium text-primary">
-            {ctaLabel ?? "Open"}
-            <ArrowRight aria-hidden="true" className="size-4" />
+    <Card className="card-interactive group h-full border-border/80 shadow-xs transition-all hover:border-primary/40">
+      <CardHeader className="space-y-2 p-5">
+        <div className="flex items-center justify-between">
+          <span
+            aria-hidden="true"
+            className="inline-flex size-8 items-center justify-center rounded-md border border-border/80 bg-muted/60 text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary group-hover:border-primary/20 transition-colors"
+          >
+            <Icon className="size-4" />
           </span>
-        ) : pendingNote ? (
-          <p className="rounded-lg border border-dashed border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+          {to ? (
+            <ArrowRight aria-hidden="true" className="size-3.5 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+          ) : null}
+        </div>
+        <CardTitle className="font-display text-sm font-semibold text-foreground">{title}</CardTitle>
+        <CardDescription className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{description}</CardDescription>
+      </CardHeader>
+      {pendingNote ? (
+        <CardContent className="p-5 pt-0">
+          <p className="rounded-md border border-dashed border-border bg-muted/40 px-2.5 py-1.5 text-[11px] text-muted-foreground">
             {pendingNote}
           </p>
-        ) : null}
-      </CardContent>
+        </CardContent>
+      ) : null}
     </Card>
   );
 
@@ -59,7 +59,7 @@ export function DashboardSection({
   return (
     <Link
       to={to}
-      className="block rounded-xl focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
+      className="block rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none"
       aria-label={`${title} — ${ctaLabel ?? "open section"}`}
     >
       {body}
@@ -69,7 +69,7 @@ export function DashboardSection({
 
 export function DashboardGrid({ sections }: { sections: DashboardSectionProps[] }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+    <div className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-3">
       {sections.map((section) => (
         <DashboardSection key={section.title} {...section} />
       ))}

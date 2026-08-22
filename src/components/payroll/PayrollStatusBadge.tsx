@@ -1,16 +1,19 @@
 import { Badge } from "@/components/ui/badge";
 
-const VARIANT: Record<string, { label: string; className: string }> = {
-  DRAFT: { label: "Draft", className: "bg-muted text-muted-foreground" },
-  GENERATED: { label: "Generated", className: "bg-accent/15 text-accent-foreground" },
-  PROCESSED: { label: "Processed", className: "bg-primary/15 text-primary" },
-  PAID: { label: "Paid", className: "bg-primary text-primary-foreground" },
+const STATUS_CONFIG: Record<
+  string,
+  { label: string; variant: "neutral" | "warning" | "info" | "success" }
+> = {
+  DRAFT: { label: "Draft", variant: "neutral" },
+  GENERATED: { label: "Generated", variant: "warning" },
+  PROCESSED: { label: "Processed", variant: "info" },
+  PAID: { label: "Paid", variant: "success" },
 };
 
 export function PayrollStatusBadge({ status }: { status: string }) {
-  const config = VARIANT[status] ?? { label: status, className: "bg-muted text-muted-foreground" };
+  const config = STATUS_CONFIG[status] ?? { label: status, variant: "neutral" };
   return (
-    <Badge variant="outline" className={config.className}>
+    <Badge variant={config.variant} className="text-xs font-semibold">
       {config.label}
     </Badge>
   );

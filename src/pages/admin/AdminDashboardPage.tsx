@@ -9,6 +9,7 @@ import {
   ClipboardCheck,
   Users,
   PlugZap,
+  Plus,
 } from "lucide-react";
 
 import { DashboardGrid, type DashboardSectionProps } from "@/components/common/DashboardSection";
@@ -16,6 +17,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { StatCard } from "@/components/common/StatCard";
 import { QuickActions, type QuickAction } from "@/components/common/QuickActions";
 import { AdminTodayStats } from "@/components/attendance/AttendanceSummaryCards";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { attendanceService } from "@/services/attendance/attendanceService";
 import { odooClient } from "@/services/odoo";
@@ -27,59 +29,59 @@ import { Badge } from "@/components/ui/badge";
 function relativeTime(iso: string) {
   const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60_000);
   if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
+  if (minutes < 60) return `${minutes}m ago`;
   const hours = Math.round(minutes / 60);
-  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  if (hours < 24) return `${hours}h ago`;
   const days = Math.round(hours / 24);
-  return `${days} day${days === 1 ? "" : "s"} ago`;
+  return `${days}d ago`;
 }
 
 const sections: DashboardSectionProps[] = [
   {
     title: "Employees",
-    description: "Directory, onboarding and employee records.",
+    description: "Directory, onboarding, departments and employee records.",
     icon: Users,
     to: "/admin/employees",
     ctaLabel: "Open directory",
   },
   {
     title: "Attendance",
-    description: "Monitor check-ins and correct records.",
+    description: "Monitor check-ins, daily presence and manual corrections.",
     icon: CalendarCheck,
     to: "/admin/attendance",
     ctaLabel: "Open attendance",
   },
   {
     title: "Leave approvals",
-    description: "Pending time-off requests awaiting review.",
+    description: "Pending time-off requests, balances and allocations.",
     icon: ClipboardCheck,
     to: "/admin/leave",
     ctaLabel: "Open approvals",
   },
   {
     title: "Payroll",
-    description: "Salary structures and payroll visibility.",
+    description: "Salary structures, period batches and payslips.",
     icon: BadgeDollarSign,
     to: "/admin/payroll",
     ctaLabel: "Open payroll",
   },
   {
     title: "Activity log",
-    description: "Latest HR operations across the organisation.",
+    description: "Audit trail of every HR operation across the workspace.",
     icon: Activity,
     to: "/admin/audit",
     ctaLabel: "Open activity log",
   },
   {
     title: "Odoo integration",
-    description: "Connection health and data synchronisation.",
+    description: "ERP connection health, synchronization matrix and logs.",
     icon: PlugZap,
     to: "/admin/integrations",
     ctaLabel: "Open integration",
   },
   {
     title: "Company settings",
-    description: "Company name and logo used across Dayflow.",
+    description: "Company name, logo and workspace branding.",
     icon: Building2,
     to: "/admin/settings",
     ctaLabel: "Open settings",
@@ -87,9 +89,11 @@ const sections: DashboardSectionProps[] = [
 ];
 
 const quickActions: readonly QuickAction[] = [
-  { label: "Employees", to: "/admin/employees", icon: Users, primary: true },
+  { label: "Directory", to: "/admin/employees", icon: Users, primary: true },
   { label: "Attendance", to: "/admin/attendance", icon: CalendarCheck },
-  { label: "My profile", to: "/admin/profile", icon: UserRound },
+  { label: "Leave queue", to: "/admin/leave", icon: ClipboardCheck },
+  { label: "Payroll", to: "/admin/payroll", icon: BadgeDollarSign },
+  { label: "Odoo Sync", to: "/admin/integrations", icon: PlugZap },
 ];
 
 export function AdminDashboardPage() {
@@ -114,29 +118,35 @@ export function AdminDashboardPage() {
   });
 
   const status = odooStatus.data;
-  const odooLabel =
-    status === "not_configured" ? "Not configured" : status ? status : "Checking…";
+  const isConnected = status === "connected";
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
       <PageHeader
-        title="HR operations"
-        description="Monitor people, attendance, approvals and payroll from one place."
+        title="HR Operations"
+        description="Real-time workspace overview: workforce, daily attendance, leave approvals, and ERP sync."
         actions={
-          <Badge variant="outline" className="gap-2">
-            <span
-              aria-hidden="true"
-              className={`size-2 rounded-full ${
-                status === "connected" ? "bg-chart-5" : "bg-muted-foreground"
-              }`}
-            />
-            Odoo: {odooLabel.toLowerCase()}
-          </Badge>
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant={isConnected ? "success" : "neutral"} className="gap-1.5 py-1 px-2.5">
+              <span
+                aria-hidden="true"
+                className={`size-1.5 rounded-full ${
+                  isConnected ? "bg-emerald-600 animate-pulse" : "bg-muted-foreground"
+                }`}
+              />
+              Odoo: {status ?? "Checking…"}
+            </Badge>
+            <Button asChild size="sm">
+              <Link to="/admin/employees/new">
+                <Plus aria-hidden="true" className="mr-1 size-3.5" /> Add employee
+              </Link>
+            </Button>
+          </div>
         }
       />
 
       {/* Four headline KPIs, all sourced from live records. */}
-      <section aria-label="Key metrics" className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <section aria-label="Key metrics" className="grid gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Total employees"
           value={summary.data?.totalEmployees ?? "—"}
@@ -163,23 +173,23 @@ export function AdminDashboardPage() {
         />
         <StatCard
           label="Odoo integration"
-          value={odooLabel}
+          value={isConnected ? "Connected" : (status ?? "—")}
           icon={PlugZap}
-          tone={status === "connected" ? "success" : "neutral"}
+          tone={isConnected ? "success" : "neutral"}
           context={
-            <span className="flex flex-wrap items-center gap-2">
+            <span className="flex flex-wrap items-center gap-1.5">
               <span>
                 {odooOverview.data?.lastSuccessfulSyncAt
-                  ? `Last synced ${relativeTime(odooOverview.data.lastSuccessfulSyncAt)}`
+                  ? `Synced ${relativeTime(odooOverview.data.lastSuccessfulSyncAt)}`
                   : "Not synced yet"}
               </span>
               {odooOverview.data && odooOverview.data.errorCount > 0 ? (
                 <Link
                   to="/admin/integrations"
                   search={{ status: "FAILED" }}
-                  className="font-medium text-destructive underline-offset-4 hover:underline"
+                  className="font-semibold text-destructive hover:underline"
                 >
-                  Sync failed — view details
+                  · {odooOverview.data.errorCount} failed
                 </Link>
               ) : null}
             </span>
@@ -191,27 +201,26 @@ export function AdminDashboardPage() {
       <QuickActions actions={quickActions} />
 
       <section className="space-y-3" aria-label="Today's attendance">
-        <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-          Today's attendance
+        <h2 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+          Today's attendance breakdown
         </h2>
         {summary.isLoading ? (
-          <Skeleton className="h-24 w-full" />
+          <Skeleton className="h-20 w-full rounded-lg" />
         ) : summary.data ? (
           <AdminTodayStats summary={summary.data} />
         ) : (
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs text-muted-foreground">
             We could not load today's attendance summary.
           </p>
         )}
       </section>
 
       <section className="space-y-3" aria-label="HR sections">
-        <h2 className="text-sm font-semibold tracking-wide text-muted-foreground uppercase">
-          Manage
+        <h2 className="text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+          Management modules
         </h2>
         <DashboardGrid sections={sections} />
       </section>
     </div>
   );
 }
-

@@ -1,16 +1,19 @@
 import { Badge } from "@/components/ui/badge";
 
-const VARIANT: Record<string, { label: string; className: string }> = {
-  PENDING: { label: "Pending", className: "bg-accent/15 text-accent-foreground" },
-  APPROVED: { label: "Approved", className: "bg-primary/15 text-primary" },
-  REJECTED: { label: "Rejected", className: "bg-destructive/15 text-destructive" },
-  CANCELLED: { label: "Cancelled", className: "bg-muted text-muted-foreground" },
+const STATUS_CONFIG: Record<
+  string,
+  { label: string; variant: "warning" | "success" | "destructive" | "neutral" }
+> = {
+  PENDING: { label: "Pending", variant: "warning" },
+  APPROVED: { label: "Approved", variant: "success" },
+  REJECTED: { label: "Rejected", variant: "destructive" },
+  CANCELLED: { label: "Cancelled", variant: "neutral" },
 };
 
 export function LeaveStatusBadge({ status }: { status: string }) {
-  const config = VARIANT[status] ?? { label: status, className: "bg-muted text-muted-foreground" };
+  const config = STATUS_CONFIG[status] ?? { label: status, variant: "neutral" };
   return (
-    <Badge variant="outline" className={config.className}>
+    <Badge variant={config.variant} className="text-xs font-semibold">
       {config.label}
     </Badge>
   );

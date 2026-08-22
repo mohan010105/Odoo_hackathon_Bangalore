@@ -9,7 +9,7 @@ type StateShellProps = {
   title: string;
   description?: string | undefined;
   action?: ReactNode | undefined;
-  tone?: "neutral" | "warning" | "danger";
+  tone?: "neutral" | "warning" | "danger" | "info";
   className?: string;
 };
 
@@ -24,23 +24,26 @@ function StateShell({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed border-border bg-card px-6 py-12 text-center",
+        "flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-border/80 bg-card/50 px-6 py-10 text-center shadow-xs",
         className,
       )}
     >
       <span
         aria-hidden="true"
         className={cn(
-          "inline-flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground",
-          tone === "warning" && "bg-accent/15 text-accent-foreground",
-          tone === "danger" && "bg-destructive/10 text-destructive",
+          "inline-flex size-10 items-center justify-center rounded-lg border bg-muted/60 text-muted-foreground",
+          tone === "warning" && "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900",
+          tone === "danger" && "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900",
+          tone === "info" && "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-900",
         )}
       >
         {icon}
       </span>
-      <h3 className="font-display text-base font-semibold text-foreground">{title}</h3>
-      {description ? <p className="max-w-md text-sm text-muted-foreground">{description}</p> : null}
-      {action}
+      <div className="space-y-1">
+        <h3 className="font-display text-sm font-semibold text-foreground">{title}</h3>
+        {description ? <p className="max-w-md text-xs text-muted-foreground leading-relaxed">{description}</p> : null}
+      </div>
+      {action ? <div className="mt-2">{action}</div> : null}
     </div>
   );
 }
@@ -50,9 +53,9 @@ export function LoadingState({ label = "Loading…" }: { label?: string }) {
     <div
       role="status"
       aria-live="polite"
-      className="flex items-center justify-center gap-2 px-6 py-12 text-sm text-muted-foreground"
+      className="flex items-center justify-center gap-2.5 px-6 py-10 text-xs font-medium text-muted-foreground"
     >
-      <Loader2 aria-hidden="true" className="size-4 animate-spin" />
+      <Loader2 aria-hidden="true" className="size-4 animate-spin text-primary" />
       <span>{label}</span>
     </div>
   );

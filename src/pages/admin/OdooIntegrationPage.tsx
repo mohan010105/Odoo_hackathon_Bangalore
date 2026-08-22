@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { AlertTriangle, RefreshCw, Users } from "lucide-react";
+import { AlertTriangle, RefreshCw, Users, Layers, Play, CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -34,7 +34,7 @@ import { ENTITY_LABELS, type OdooEntity, type SyncRunResult } from "@/lib/odoo/m
 import { odooIntegrationService } from "@/services/odoo/integrationService";
 
 function formatTime(value: string | null) {
-  return value ? new Date(value).toLocaleString() : "Never";
+  return value ? new Date(value).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "Never";
 }
 
 /**
@@ -94,32 +94,33 @@ export function OdooIntegrationPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Odoo integration"
-        description="Test the connection, monitor synchronisation health and re-run syncs safely."
+        title="Odoo ERP Integration"
+        description="Bidirectional data synchronization console between Dayflow HRMS and connected Odoo ERP instances."
         actions={
-          <div className="flex flex-wrap gap-2">
-            <Button variant="outline" onClick={refreshAll}>
-              <RefreshCw className="mr-2 size-4" aria-hidden="true" />
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="outline" size="sm" onClick={refreshAll}>
+              <RefreshCw className="mr-1.5 size-3.5" aria-hidden="true" />
               Refresh
             </Button>
             <Button
               variant="outline"
+              size="sm"
               onClick={() => {
                 setErrorEntity(undefined);
                 setErrorsOpen(true);
               }}
             >
-              <AlertTriangle className="mr-2 size-4" aria-hidden="true" />
-              Sync errors
+              <AlertTriangle className="mr-1.5 size-3.5 text-destructive" aria-hidden="true" />
+              Sync Errors
               {data && data.errorCount > 0 ? (
-                <Badge variant="destructive" className="ml-2">
+                <Badge variant="destructive" className="ml-1.5 px-1.5 py-0 text-[10px]">
                   {data.errorCount}
                 </Badge>
               ) : null}
             </Button>
-            <Button onClick={() => setBulkOpen(true)} disabled={configured === false}>
-              <Users className="mr-2 size-4" aria-hidden="true" />
-              Bulk employee sync
+            <Button size="sm" onClick={() => setBulkOpen(true)} disabled={configured === false}>
+              <Users className="mr-1.5 size-3.5" aria-hidden="true" />
+              Bulk Employee Sync
             </Button>
           </div>
         }
@@ -141,64 +142,72 @@ export function OdooIntegrationPage() {
         />
       ) : data ? (
         <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardDescription>Last successful sync</CardDescription>
+          <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-4">
+            <Card className="border-border/80 shadow-xs">
+              <CardHeader className="p-4 pb-1">
+                <CardDescription className="text-[11px] font-semibold tracking-wider uppercase">Last Successful Sync</CardDescription>
               </CardHeader>
-              <CardContent className="text-sm font-semibold">
+              <CardContent className="p-4 pt-1 text-base font-bold font-display text-foreground">
                 {formatTime(data.lastSuccessfulSyncAt)}
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardDescription>Last attempt</CardDescription>
+            <Card className="border-border/80 shadow-xs">
+              <CardHeader className="p-4 pb-1">
+                <CardDescription className="text-[11px] font-semibold tracking-wider uppercase">Last Sync Attempt</CardDescription>
               </CardHeader>
-              <CardContent className="text-sm font-semibold">
+              <CardContent className="p-4 pt-1 text-base font-bold font-display text-foreground">
                 {formatTime(data.lastSyncAttemptAt)}
               </CardContent>
             </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardDescription>Recent failures</CardDescription>
+            <Card className="border-border/80 shadow-xs">
+              <CardHeader className="p-4 pb-1">
+                <CardDescription className="text-[11px] font-semibold tracking-wider uppercase">Recent Failures</CardDescription>
               </CardHeader>
-              <CardContent className="text-2xl font-semibold">{data.errorCount}</CardContent>
+              <CardContent className={`p-4 pt-1 text-2xl font-bold font-display ${data.errorCount > 0 ? "text-destructive" : "text-emerald-600 dark:text-emerald-400"}`}>
+                {data.errorCount}
+              </CardContent>
             </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardDescription>Payroll module</CardDescription>
+            <Card className="border-border/80 shadow-xs">
+              <CardHeader className="p-4 pb-1">
+                <CardDescription className="text-[11px] font-semibold tracking-wider uppercase">Odoo Payroll Module</CardDescription>
               </CardHeader>
-              <CardContent className="text-sm font-semibold">
+              <CardContent className="p-4 pt-1 text-base font-bold font-display text-foreground">
                 {data.payrollAvailable === null
-                  ? "Unknown"
+                  ? "Auto-detecting"
                   : data.payrollAvailable
                     ? "Available"
-                    : "Not installed"}
+                    : "Not Installed"}
               </CardContent>
             </Card>
           </div>
 
-          <Card>
-            <CardHeader className="flex flex-row items-start justify-between gap-4">
-              <div className="space-y-1">
-                <CardTitle>Synchronisation by module</CardTitle>
+          <Card className="border-border/80 shadow-xs">
+            <CardHeader className="flex flex-row items-center justify-between gap-4 p-5 pb-3">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <Layers className="size-4 text-primary" />
+                  <CardTitle className="font-display text-base font-semibold">Synchronization Matrix</CardTitle>
+                </div>
                 <CardDescription>
-                  Re-running a sync is safe: linked records are updated instead of duplicated.
+                  Module-by-module synchronization status. Linked records are safely updated without duplication.
                 </CardDescription>
               </div>
               <Button
-                variant="secondary"
+                variant="default"
+                size="sm"
+                className="gap-1.5"
                 onClick={() => setConfirmFullSync(true)}
                 disabled={busy || configured === false}
               >
-                {fullSync.isPending ? "Syncing…" : "Sync everything"}
+                <Play className="size-3.5" />
+                {fullSync.isPending ? "Syncing All…" : "Sync Everything"}
               </Button>
             </CardHeader>
-            <CardContent className="overflow-x-auto">
+            <CardContent className="p-5 pt-0">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Module</TableHead>
+                    <TableHead>Module / Entity</TableHead>
                     <TableHead className="text-right">Synced</TableHead>
                     <TableHead className="text-right">Pending</TableHead>
                     <TableHead className="text-right">Failed</TableHead>
@@ -208,16 +217,29 @@ export function OdooIntegrationPage() {
                 <TableBody>
                   {data.stats.map((stat) => (
                     <TableRow key={stat.entity}>
-                      <TableCell className="font-medium">{ENTITY_LABELS[stat.entity]}</TableCell>
-                      <TableCell className="text-right">{stat.synced}</TableCell>
-                      <TableCell className="text-right">{stat.pending}</TableCell>
-                      <TableCell className="text-right">{stat.failed}</TableCell>
+                      <TableCell className="font-medium text-foreground">
+                        {ENTITY_LABELS[stat.entity]}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-xs tabular-nums text-emerald-600 dark:text-emerald-400 font-semibold">
+                        {stat.synced}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-xs tabular-nums text-muted-foreground">
+                        {stat.pending}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-xs tabular-nums font-semibold">
+                        {stat.failed > 0 ? (
+                          <span className="text-destructive">{stat.failed}</span>
+                        ) : (
+                          <span className="text-muted-foreground">0</span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-1.5">
                           {stat.failed > 0 ? (
                             <Button
                               variant="ghost"
                               size="sm"
+                              className="h-7 text-xs text-destructive hover:text-destructive"
                               onClick={() => {
                                 setErrorEntity(stat.entity);
                                 setErrorsOpen(true);
@@ -229,12 +251,13 @@ export function OdooIntegrationPage() {
                           <Button
                             variant="outline"
                             size="sm"
+                            className="h-7 text-xs"
                             disabled={busy || configured === false}
                             onClick={() => entitySync.mutate(stat.entity)}
                           >
                             {entitySync.isPending && entitySync.variables === stat.entity
                               ? "Syncing…"
-                              : "Retry sync"}
+                              : "Sync now"}
                           </Button>
                         </div>
                       </TableCell>
@@ -262,28 +285,31 @@ export function OdooIntegrationPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Synchronise Dayflow data with Odoo?</AlertDialogTitle>
             <AlertDialogDescription>
-              This may create or update records in the connected Odoo environment. Records already
+              This will run an authenticated batch sync against the connected Odoo database. Records already
               linked to Odoo are updated, never duplicated.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => fullSync.mutate()}>Start sync</AlertDialogAction>
+            <AlertDialogAction onClick={() => fullSync.mutate()}>Start Sync</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       <AlertDialog open={summary !== null} onOpenChange={(open) => !open && setSummary(null)}>
-        <AlertDialogContent>
+        <AlertDialogContent className="max-w-md">
           <AlertDialogHeader>
-            <AlertDialogTitle>Synchronisation summary</AlertDialogTitle>
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="size-5 text-emerald-600" />
+              <AlertDialogTitle>Synchronisation Complete</AlertDialogTitle>
+            </div>
             <AlertDialogDescription>
               {summary && summary.some((row) => row.failed > 0)
-                ? "Synchronisation completed with some failures. Open sync errors for safe details."
-                : "All eligible records were synchronised successfully."}
+                ? "Synchronisation completed with some warnings. Open sync errors for details."
+                : "All eligible records were synchronised successfully with Odoo."}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto py-2">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -296,10 +322,10 @@ export function OdooIntegrationPage() {
               <TableBody>
                 {(summary ?? []).map((row) => (
                   <TableRow key={row.entity}>
-                    <TableCell className="font-medium">{ENTITY_LABELS[row.entity]}</TableCell>
-                    <TableCell className="text-right">{row.succeeded + row.failed}</TableCell>
-                    <TableCell className="text-right">{row.succeeded}</TableCell>
-                    <TableCell className="text-right">{row.failed}</TableCell>
+                    <TableCell className="font-medium text-xs">{ENTITY_LABELS[row.entity]}</TableCell>
+                    <TableCell className="text-right font-mono text-xs">{row.succeeded + row.failed}</TableCell>
+                    <TableCell className="text-right font-mono text-xs text-emerald-600">{row.succeeded}</TableCell>
+                    <TableCell className="text-right font-mono text-xs text-destructive">{row.failed}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

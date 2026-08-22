@@ -38,3 +38,5 @@ dist-ssr
 !.env.example
 .npmrc
 .tempmediaStorage
+.mohan
+

@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { Building2, MapPin } from "lucide-react";
+import { Building2, MapPin, Mail, ChevronRight } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -8,14 +8,14 @@ import type { EmployeeStatus } from "@/types";
 
 const STATUS_LABEL: Record<EmployeeStatus, string> = {
   ACTIVE: "Active",
-  INACTIVE: "Not active",
+  INACTIVE: "Inactive",
   ON_LEAVE: "On leave",
 };
 
 function statusVariant(status: EmployeeStatus) {
-  if (status === "ACTIVE") return "default" as const;
-  if (status === "ON_LEAVE") return "secondary" as const;
-  return "outline" as const;
+  if (status === "ACTIVE") return "success" as const;
+  if (status === "ON_LEAVE") return "warning" as const;
+  return "neutral" as const;
 }
 
 export function EmployeeCard({ employee }: { employee: EmployeeWithMeta }) {
@@ -26,38 +26,57 @@ export function EmployeeCard({ employee }: { employee: EmployeeWithMeta }) {
     <Link
       to="/admin/employees/$employeeId"
       params={{ employeeId: employee.id }}
-      className="group flex flex-col gap-4 rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/40 hover:bg-accent/5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+      className="card-interactive group flex flex-col justify-between rounded-lg border border-border/80 bg-card p-4 shadow-xs transition-all hover:border-primary/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       aria-label={`Open ${name}`}
     >
-      <div className="flex items-start gap-3">
-        <Avatar className="size-11">
-          {employee.avatarUrl ? <AvatarImage src={employee.avatarUrl} alt="" /> : null}
-          <AvatarFallback>{initials || "—"}</AvatarFallback>
-        </Avatar>
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-display font-semibold text-foreground">{name}</p>
-          <p className="truncate font-mono text-xs text-muted-foreground">{employee.employeeId}</p>
+      <div className="space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <Avatar className="size-10 rounded-md border border-border/80">
+              {employee.avatarUrl ? <AvatarImage src={employee.avatarUrl} alt="" /> : null}
+              <AvatarFallback className="rounded-md bg-primary/10 text-xs font-bold text-primary">
+                {initials || "—"}
+              </AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1">
+              <p className="truncate font-display text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+                {name}
+              </p>
+              <p className="truncate font-mono text-xs text-muted-foreground">{employee.employeeId}</p>
+            </div>
+          </div>
+          <Badge variant={statusVariant(employee.status)} className="shrink-0 text-[11px]">
+            {STATUS_LABEL[employee.status]}
+          </Badge>
         </div>
-        <Badge variant={statusVariant(employee.status)}>{STATUS_LABEL[employee.status]}</Badge>
+
+        <div className="space-y-1.5 border-t border-border/60 pt-2.5 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 truncate">
+            <Building2 aria-hidden="true" className="size-3.5 shrink-0 text-muted-foreground/80" />
+            <span className="truncate">
+              {employee.designation ?? "Position not set"}
+              {employee.department ? ` · ${employee.department}` : ""}
+            </span>
+          </div>
+          {employee.location ? (
+            <div className="flex items-center gap-2 truncate">
+              <MapPin aria-hidden="true" className="size-3.5 shrink-0 text-muted-foreground/80" />
+              <span className="truncate">{employee.location}</span>
+            </div>
+          ) : null}
+          {employee.email ? (
+            <div className="flex items-center gap-2 truncate">
+              <Mail aria-hidden="true" className="size-3.5 shrink-0 text-muted-foreground/80" />
+              <span className="truncate">{employee.email}</span>
+            </div>
+          ) : null}
+        </div>
       </div>
 
-      <dl className="space-y-1 text-sm text-muted-foreground">
-        <div className="flex items-center gap-2">
-          <Building2 aria-hidden="true" className="size-3.5" />
-          <dt className="sr-only">Job position</dt>
-          <dd className="truncate">
-            {employee.designation ?? "Position not set"}
-            {employee.department ? ` · ${employee.department}` : ""}
-          </dd>
-        </div>
-        {employee.location ? (
-          <div className="flex items-center gap-2">
-            <MapPin aria-hidden="true" className="size-3.5" />
-            <dt className="sr-only">Location</dt>
-            <dd className="truncate">{employee.location}</dd>
-          </div>
-        ) : null}
-      </dl>
+      <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2 text-xs font-medium text-primary">
+        <span>View record</span>
+        <ChevronRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+      </div>
     </Link>
   );
 }

@@ -11,11 +11,11 @@ import { odooIntegrationService } from "@/services/odoo/integrationService";
 
 const TONE: Record<
   OdooConnectionState,
-  { badge: "default" | "secondary" | "destructive" | "outline"; icon: typeof CheckCircle2 }
+  { badge: "success" | "destructive" | "neutral" | "warning"; icon: typeof CheckCircle2 }
 > = {
-  CONNECTED: { badge: "default", icon: CheckCircle2 },
+  CONNECTED: { badge: "success", icon: CheckCircle2 },
   DISCONNECTED: { badge: "destructive", icon: WifiOff },
-  NOT_CONFIGURED: { badge: "outline", icon: Settings },
+  NOT_CONFIGURED: { badge: "neutral", icon: Settings },
   ERROR: { badge: "destructive", icon: WifiOff },
 };
 
@@ -52,55 +52,54 @@ export function OdooConnectionCard({
   const tested = Boolean(test.data);
 
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-start justify-between gap-4">
+    <Card className="border-border/80 shadow-xs">
+      <CardHeader className="flex flex-row items-start justify-between gap-4 p-5 pb-3">
         <div className="space-y-1">
-          <CardTitle className="flex items-center gap-2">
-            <PlugZap className="size-5 text-primary" aria-hidden="true" />
-            Odoo connection
+          <CardTitle className="flex items-center gap-2 font-display text-base font-semibold">
+            <PlugZap className="size-4 text-primary" aria-hidden="true" />
+            Odoo ERP Connection
           </CardTitle>
           <CardDescription>
-            Runs a live authentication check against the configured Odoo environment.
+            Live JSON-RPC / XML-RPC authenticated session with the configured Odoo ERP database.
           </CardDescription>
         </div>
-        <Button onClick={() => test.mutate()} disabled={test.isPending}>
-          {test.isPending ? "Testing…" : "Test connection"}
+        <Button onClick={() => test.mutate()} disabled={test.isPending} size="sm">
+          {test.isPending ? "Testing…" : "Test Connection"}
         </Button>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-3 p-5 pt-0">
         <div className="flex flex-wrap items-center gap-3">
-          <Badge variant={tone.badge} className="gap-1.5">
+          <Badge variant={tone.badge} className="gap-1.5 py-1 px-2.5 text-xs font-semibold">
             <Icon className="size-3.5" aria-hidden="true" />
             {CONNECTION_LABELS[state]}
           </Badge>
           {tested ? (
-            <span className="text-sm text-muted-foreground">
-              Checked {new Date(test.data!.checkedAt).toLocaleString()}
+            <span className="text-xs text-muted-foreground">
+              Last verified: {new Date(test.data!.checkedAt).toLocaleTimeString()}
             </span>
           ) : (
-            <span className="text-sm text-muted-foreground">
+            <span className="text-xs text-muted-foreground">
               {configured === false
-                ? "Odoo credentials have not been added yet."
-                : "Run the test to confirm the live connection state."}
+                ? "Odoo ERP credentials pending configuration in server environment."
+                : "Click Test Connection to verify live connectivity."}
             </span>
           )}
         </div>
 
         {failureCount > 0 ? (
-          <Button asChild variant="outline" size="sm" className="w-fit">
-            {/* Opens the activity log pre-filtered to failed entries. */}
+          <Button asChild variant="outline" size="sm" className="h-7 text-xs text-destructive border-destructive/30">
             <Link to="/admin/integrations" search={{ status: "FAILED" }} hash="sync-activity">
-              <AlertTriangle className="mr-2 size-4 text-destructive" aria-hidden="true" />
-              View failures ({failureCount})
+              <AlertTriangle className="mr-1.5 size-3.5" aria-hidden="true" />
+              View Sync Failures ({failureCount})
             </Link>
           </Button>
         ) : null}
 
-        <p className="text-sm text-muted-foreground" role="status">
+        <p className="rounded-md border border-border/60 bg-muted/20 p-2.5 text-xs text-muted-foreground" role="status">
           {test.data?.message ??
             (configured === false
-              ? "Add the Odoo address, database, user and API key on the server to enable synchronisation."
-              : "Credentials are configured. The state above reflects the last test you ran in this session.")}
+              ? "Set ODOO_BASE_URL, ODOO_DATABASE, ODOO_USERNAME, and ODOO_API_KEY in the server environment."
+              : "Server credentials configured. Synchronisation commands will update records bidirectionally.")}
         </p>
       </CardContent>
     </Card>

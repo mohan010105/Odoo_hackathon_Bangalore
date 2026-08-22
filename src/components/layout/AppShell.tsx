@@ -120,56 +120,57 @@ export function AppShell({
   const sidebarBody = (options?: { onNavigate?: () => void; compact?: boolean }) => {
     const compact = options?.compact ?? false;
     return (
-      <div className={`flex h-full flex-col gap-6 py-4 ${compact ? "px-2" : "px-3"}`}>
-        <div className={compact ? "flex justify-center" : "px-1"}>
+      <div className={`flex h-full flex-col gap-4 py-3.5 ${compact ? "px-2" : "px-3"}`}>
+        <div className={compact ? "flex justify-center" : "px-1.5 flex items-center justify-between"}>
           <Brand iconOnly={compact} />
+          {compact ? null : (
+            <Badge variant="secondary" className="text-[10px] font-semibold tracking-wider uppercase">
+              {workspaceLabel}
+            </Badge>
+          )}
         </div>
-        {compact ? null : (
-          <Badge variant="secondary" className="ml-1 w-fit text-[11px] tracking-wide uppercase">
-            {workspaceLabel}
-          </Badge>
-        )}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto pt-2">
           <SidebarNav
             groups={groups}
             collapsed={compact}
             {...(options?.onNavigate ? { onNavigate: options.onNavigate } : {})}
           />
         </div>
-        <Separator />
+        <Separator className="bg-border/80" />
         <div className="space-y-1">
           <Link
             to={profileTo}
             onClick={options?.onNavigate}
             aria-label="View my profile"
-            className={`flex items-center rounded-xl py-2 transition-colors hover:bg-secondary ${
-              compact ? "justify-center px-0" : "gap-3 px-2"
+            className={`flex items-center rounded-md py-1.5 transition-colors hover:bg-muted/60 ${
+              compact ? "justify-center px-0" : "gap-2.5 px-2"
             }`}
           >
             <span
               aria-hidden="true"
-              className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary"
+              className="inline-flex size-7 shrink-0 items-center justify-center rounded-md bg-primary/10 text-xs font-bold text-primary"
             >
               {initials || "DF"}
             </span>
             {compact ? null : (
               <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium text-foreground">
+                <span className="block truncate text-xs font-semibold text-foreground">
                   {displayName}
                 </span>
-                <span className="block text-xs text-muted-foreground">{roleLabel}</span>
+                <span className="block text-[11px] text-muted-foreground">{roleLabel}</span>
               </span>
             )}
           </Link>
           <Button
             variant="ghost"
-            className={`w-full text-destructive hover:text-destructive ${
-              compact ? "justify-center px-0" : "justify-start gap-3"
+            size="sm"
+            className={`w-full text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 ${
+              compact ? "justify-center px-0" : "justify-start gap-2.5 px-2"
             }`}
             onClick={handleSignOut}
             aria-label="Log out"
           >
-            <LogOut aria-hidden="true" className="size-4" />
+            <LogOut aria-hidden="true" className="size-3.5" />
             {compact ? null : "Log out"}
           </Button>
         </div>
@@ -181,28 +182,28 @@ export function AppShell({
     <TooltipProvider delayDuration={200}>
       <div
         className={`min-h-screen bg-background lg:grid ${
-          collapsed ? "lg:grid-cols-[4.5rem_1fr]" : "lg:grid-cols-[16.5rem_1fr]"
+          collapsed ? "lg:grid-cols-[4.5rem_1fr]" : "lg:grid-cols-[16rem_1fr]"
         }`}
       >
         <SessionTimeout />
-        <aside className="sticky top-0 hidden h-screen border-r border-border bg-sidebar lg:block">
+        <aside className="sticky top-0 hidden h-screen border-r border-border/80 bg-card lg:block">
           {sidebarBody({ compact: collapsed })}
         </aside>
 
         <div className="flex min-w-0 flex-col">
-          <header className="sticky top-0 z-20 flex items-center gap-3 border-b border-border bg-background/85 px-4 py-3 backdrop-blur sm:px-6 lg:px-8">
+          <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border/80 bg-card/95 px-4 backdrop-blur-md sm:px-6 lg:px-8">
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
                 <Button
                   variant="outline"
                   size="icon"
                   aria-label="Open navigation"
-                  className="lg:hidden"
+                  className="size-8 lg:hidden"
                 >
                   <Menu aria-hidden="true" className="size-4" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="w-72 overflow-y-auto p-0">
+              <SheetContent side="left" className="w-72 overflow-y-auto p-0 bg-card">
                 <SheetTitle className="sr-only">Dayflow navigation</SheetTitle>
                 {sidebarBody({ onNavigate: () => setMobileOpen(false) })}
               </SheetContent>
@@ -213,7 +214,7 @@ export function AppShell({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="hidden lg:inline-flex"
+                  className="hidden size-8 lg:inline-flex"
                   aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
                   aria-pressed={collapsed}
                   onClick={toggleCollapsed}
@@ -231,7 +232,7 @@ export function AppShell({
             </Tooltip>
 
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-foreground lg:text-base">
+              <p className="truncate text-sm font-semibold text-foreground">
                 {pageLabel}
               </p>
               <div className="hidden min-w-0 sm:block">
@@ -256,13 +257,13 @@ export function AppShell({
                   <span className="sr-only">Search employees</span>
                   <Search
                     aria-hidden="true"
-                    className="pointer-events-none absolute top-2.5 left-3 size-4 text-muted-foreground"
+                    className="pointer-events-none absolute top-2.5 left-2.5 size-3.5 text-muted-foreground"
                   />
                   <Input
                     value={search}
                     onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Search employees…"
-                    className="w-56 pl-9"
+                    placeholder="Search directory…"
+                    className="h-8 w-52 pl-8 text-xs"
                   />
                 </label>
               </form>
@@ -272,56 +273,55 @@ export function AppShell({
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" aria-label="Account menu" className="gap-2 px-2">
+                <Button variant="ghost" size="sm" aria-label="Account menu" className="gap-2 px-1.5 h-8">
                   <span
                     aria-hidden="true"
-                    className="inline-flex size-8 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary"
+                    className="inline-flex size-6 items-center justify-center rounded-md bg-primary/10 text-[11px] font-bold text-primary"
                   >
                     {initials || "DF"}
                   </span>
                   <span className="hidden min-w-0 text-left lg:block">
-                    <span className="block max-w-36 truncate text-sm font-medium">
+                    <span className="block max-w-32 truncate text-xs font-semibold">
                       {displayName}
                     </span>
-                    <span className="block text-[11px] text-muted-foreground">{roleLabel}</span>
                   </span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64">
-                <DropdownMenuLabel className="space-y-1 font-normal">
-                  <span className="block truncate text-sm font-medium">{displayName}</span>
-                  <span className="block truncate text-xs text-muted-foreground">
+              <DropdownMenuContent align="end" className="w-60">
+                <DropdownMenuLabel className="space-y-1 font-normal p-3">
+                  <span className="block truncate text-xs font-semibold text-foreground">{displayName}</span>
+                  <span className="block truncate text-[11px] text-muted-foreground">
                     {user?.email ?? "—"}
                   </span>
-                  <Badge variant="secondary" className="text-[10px] tracking-wide uppercase">
+                  <Badge variant="secondary" className="mt-1 text-[10px] tracking-wide uppercase">
                     {roleLabel}
                   </Badge>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link to={profileTo}>
-                    <UserRound aria-hidden="true" className="mr-2 size-4" /> Profile
+                  <Link to={profileTo} className="text-xs">
+                    <UserRound aria-hidden="true" className="mr-2 size-3.5" /> Profile
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to={settingsTo}>
-                    <Settings aria-hidden="true" className="mr-2 size-4" /> Settings
+                  <Link to={settingsTo} className="text-xs">
+                    <Settings aria-hidden="true" className="mr-2 size-3.5" /> Settings
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
-                  <Link to={helpTo}>
-                    <CircleHelp aria-hidden="true" className="mr-2 size-4" /> Help
+                  <Link to={helpTo} className="text-xs">
+                    <CircleHelp aria-hidden="true" className="mr-2 size-3.5" /> Help
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onSelect={() => void handleSignOut()} className="text-destructive">
-                  <LogOut aria-hidden="true" className="mr-2 size-4" /> Log out
+                <DropdownMenuItem onSelect={() => void handleSignOut()} className="text-xs text-destructive">
+                  <LogOut aria-hidden="true" className="mr-2 size-3.5" /> Log out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </header>
 
-          <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
             {children}
           </main>
         </div>
