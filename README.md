@@ -642,10 +642,4 @@ Workforce Management + Odoo Integration
 
 📜 License
 
-This project is developed for hackathon and educational purposes.
-<p align="center">
-⚡ DAYFLOW HRMS
-
-Modern Workforce Management. Connected to Enterprise Operations.
-
-</p> ```
+This project is developed for Hackathon and educational purposes.
